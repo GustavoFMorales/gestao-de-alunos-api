@@ -12,5 +12,8 @@ describe("Login", () => {
         senha: "admin123",
       });
     expect(response.status).to.equal(200);
+    expect(response.body.token).to.be.a('string');
+    expect(response.body.usuario.id).to.equal('admin-principal');
+    expect(response.body.usuario.nome).to.equal('Administrador do Sistema');
   });
 });
