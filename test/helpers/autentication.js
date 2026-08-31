@@ -1,17 +1,26 @@
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import { config } from "dotenv";
 config();
-import postLogin from "../fixtures/postLogin.json" with {type: 'json'};
 
-export const obterToken = async () => {
+export const obterToken = async (email, senha) => {
     let token;
-    const bodyLogin = structuredClone(postLogin);
     const response = await request(process.env.BASE_URL)
      .post('/api/auth/login')
      .set('Content-Type', 'application/json')
-     .send(bodyLogin)
+     .send({
+        email: email,
+        senha: senha
+     })
      token = response.body.token
      return token
 }
 
-export default {obterToken}
+export const obterTokenExpirado = () =>
+    jwt.sign(
+        { sub: 'admin-principal', role: 'admin', nome: 'Administrador do Sistema' },
+        process.env.JWT_SECRET || 'segredo-dev-gestao-de-alunos',
+        { expiresIn: '-1h' }
+    );
+
+export default { obterToken, obterTokenExpirado }
