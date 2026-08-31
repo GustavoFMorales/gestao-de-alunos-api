@@ -4,7 +4,6 @@ import postLogin from "../fixtures/postLogin.json" with { type: "json" };
 import { config } from "dotenv";
 config();
 
-
 describe("Login", () => {
   it("login deve retornar 200 quando o usuario e senha forem corretos", async () => {
     const bodyLogin = structuredClone(postLogin);
@@ -17,54 +16,48 @@ describe("Login", () => {
     expect(response.body.usuario.id).to.equal("admin-principal");
     expect(response.body.usuario.nome).to.equal("Administrador do Sistema");
     expect(response.body.usuario.email).to.equal("admin@escola.com");
-    
   });
-  it("login deve retornar 400 quando o e-mail não for informado", async () => {
-    const bodyLogin = structuredClone(postLogin);
-    bodyLogin.email = "";
-    const response = await request(process.env.BASE_URL)
-      .post("/api/auth/login")
-      .set("Content-Type", "application/json")
-      .send(bodyLogin);
+  const camposObrigatorios = ["email", "senha"];
+  camposObrigatorios.forEach((campo) => {
+    it(`login deve retornar 400 qunado o/a ${campo} não for infomadp`, async () => {
+      const bodyLogin = structuredClone(postLogin);
+      bodyLogin[campo] = "";
+      const response = await request(process.env.BASE_URL)
+        .post("/api/auth/login")
+        .set("Content-Type", "application/json")
+        .send(bodyLogin);
 
-    expect(response.status).to.equal(400);
-    expect(response.body.error).to.equal(
-      'Os campos "email" e "senha" são obrigatórios.',
-    );
+      expect(response.status).to.equal(400);
+      expect(response.body.error).to.equal(
+        'Os campos "email" e "senha" são obrigatórios.',
+      );
+    });
   });
-  it("login deve retornar 400 quando a senha não for informada", async () => {
-    const bodyLogin = structuredClone(postLogin);
-    bodyLogin.senha = "";
-    const response = await request(process.env.BASE_URL)
-      .post("/api/auth/login")
-      .set("Content-Type", "application/json")
-      .send(bodyLogin);
 
-    expect(response.status).to.equal(400);
-    expect(response.body.error).to.equal(
-      'Os campos "email" e "senha" são obrigatórios.',
-    );
-  });
-  it("login deve retornar 401 quando a senha informada for incorreta", async () => {
-    const bodyLogin = structuredClone(postLogin);
-    bodyLogin.senha = "123456";
-    const response = await request(process.env.BASE_URL)
-      .post("/api/auth/login")
-      .set("Content-Type", "application/json")
-      .send(bodyLogin);
+  const credenciaisInvalidas = [
+    {
+      campo: "email",
+      valor: "teste@teste.com",
+      descricao: "o e-mail informado for incorreto",
+    },
+    {
+      campo: "senha",
+      valor: "123456",
+      descricao: "a senha informada for incorreta",
+    },
+  ];
+  credenciaisInvalidas.forEach(({ campo, valor, descricao }) => {
+    it(`login deve retornar 401 quando ${descricao}`, async () => {
+      const bodyLogin = structuredClone(postLogin);
+      bodyLogin[campo] = valor;
 
-    expect(response.status).to.equal(401);
-    expect(response.body.error).to.equal("E-mail ou senha inválidos.");
-  });
-  it("login deve retornar 401 quando o e-mail informado for incorreto", async () => {
-    const bodyLogin = structuredClone(postLogin);
-    bodyLogin.email = "teste@teste.com";
-    const response = await request(process.env.BASE_URL)
-      .post("/api/auth/login")
-      .set("Content-Type", "application/json")
-      .send(bodyLogin);
+      const response = await request(process.env.BASE_URL)
+        .post("/api/auth/login")
+        .set("Content-Type", "application/json")
+        .send(bodyLogin);
 
-    expect(response.status).to.equal(401);
-    expect(response.body.error).to.equal("E-mail ou senha inválidos.");
+      expect(response.status).to.equal(401);
+      expect(response.body.error).to.equal("E-mail ou senha inválidos.");
+    });
   });
 });

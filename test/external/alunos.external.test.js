@@ -42,4 +42,21 @@ describe("Alunos", () => {
       "Já existe um aluno cadastrado com essa matrícula ou e-mail.",
     );
   });
+  const camposObrigatorios = ["nome", "email", "matricula", "senha"];
+  camposObrigatorios.forEach((campo) => {
+    it(`deve negar cadastro quando o campo ${campo} não for preenchido`, async () => {
+      const bodyAlunoCadastrado = structuredClone(alunoCadastrado);
+      bodyAlunoCadastrado[campo] = "";
+
+      const response = await request(process.env.BASE_URL)
+        .post("/api/admin/alunos")
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${token}`)
+        .send(bodyAlunoCadastrado);
+      expect(response.status).to.equal(400);
+      expect(response.body.error).to.equal(
+        'Os campos "nome", "email", "matricula" e "senha" são obrigatórios.',
+      );
+    });
+  });
 });
