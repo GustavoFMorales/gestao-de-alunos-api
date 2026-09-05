@@ -1,7 +1,7 @@
-import request from "supertest";
+import { api } from "../helpers/api.js";
+import { gerarAluno } from "../factories/aluno.factory.js";
 import { expect } from "chai";
 import { obterToken, obterTokenExpirado } from "../helpers/autentication.js";
-import postCadastraAluno from "../fixtures/postCadastraAluno.json" with { type: "json" };
 import alunoCadastrado from "../fixtures/alunoCadastrado.json" with { type: "json" };
 import { config } from "dotenv";
 config();
@@ -11,14 +11,11 @@ describe("Alunos", () => {
   let bodyCadastraAluno;
   beforeEach(async () => {
     token = await obterToken(process.env.EMAIL_ADMIN, process.env.SENHA_ADMIN);
-    bodyCadastraAluno = structuredClone(postCadastraAluno);
-    const sufixo = Date.now();
-    bodyCadastraAluno.email = `paola.${sufixo}@gmail.com`;
-    bodyCadastraAluno.matricula = `${sufixo}`;
+    bodyCadastraAluno = gerarAluno();
   });
   describe("POST/alunos", () => {
     it("deve cadastrar um aluno quando ele informa dados válidos", async () => {
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .post("/api/admin/alunos")
         .set("Content-type", "application/json")
         .set("Authorization", `Bearer ${token}`)
@@ -40,7 +37,7 @@ describe("Alunos", () => {
     });
     it("deve negar o cadastro de um aluno quando ele já existe", async () => {
       const bodyAlunoCadastrado = structuredClone(alunoCadastrado);
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .post("/api/admin/alunos")
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${token}`)
@@ -57,7 +54,7 @@ describe("Alunos", () => {
         const bodyAlunoCadastrado = structuredClone(alunoCadastrado);
         bodyAlunoCadastrado[campo] = "";
 
-        const response = await request(process.env.BASE_URL)
+        const response = await api()
           .post("/api/admin/alunos")
           .set("Content-Type", "application/json")
           .set("Authorization", `Bearer ${token}`)
@@ -71,7 +68,7 @@ describe("Alunos", () => {
     it("deve negar cadastro do aluno com token ausente", async () => {
       token = "";
       const bodyAlunoCadastrado = structuredClone(alunoCadastrado);
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .post("/api/admin/alunos")
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${token}`)
@@ -84,7 +81,7 @@ describe("Alunos", () => {
     });
     it("deve negar cadastro do usuário quando o token for inválido", async () => {
       token = process.env.TOKEN_INVALIDO;
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .post("/api/admin/alunos")
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${token}`)
@@ -96,7 +93,7 @@ describe("Alunos", () => {
       );
     });
     it("deve negar cadastro do usuário quando o token estiver expirado", async () => {
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .post("/api/admin/alunos")
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${obterTokenExpirado()}`)
@@ -112,7 +109,7 @@ describe("Alunos", () => {
         process.env.EMAIL_ALUNO,
         process.env.SENHA_ALUNO,
       );
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .post("/api/admin/alunos")
         .set("Content-type", "application/json")
         .set("Authorization", `Bearer ${token}`)
@@ -124,7 +121,7 @@ describe("Alunos", () => {
       );
     });
     it("deve cadastrar aluno com dados válidos e verificar se a senha não esta retornnado no body", async () => {
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .post("/api/admin/alunos")
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${token}`)
@@ -140,7 +137,7 @@ describe("Alunos", () => {
         id: "id-forjado-pelo-cliente",
       };
 
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .post("/api/admin/alunos")
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${token}`)
@@ -151,7 +148,7 @@ describe("Alunos", () => {
       expect(response.body.id).to.not.equal("id-forjado-pelo-cliente");
     });
     it("deve negar cadastro do aluno quando o token estiver expirado", async () => {
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .post("/api/admin/alunos")
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${obterTokenExpirado()}`)
@@ -165,7 +162,7 @@ describe("Alunos", () => {
   });
   describe("GET/alunos", () => {
     it("deve retornar 200 para listagem de alunos", async () => {
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .get("/api/admin/alunos")
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${token}`);
@@ -184,7 +181,7 @@ describe("Alunos", () => {
     });
     it("deve retornar 401 quando o token estiver ausente", async () => {
       token = "";
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .get("/api/admin/alunos")
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${token}`);
@@ -195,7 +192,7 @@ describe("Alunos", () => {
       );
     });
     it("deve retornar 401 quando o token estiver invalido", async () => {
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .get("/api/admin/alunos")
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${process.env.SENHA_ALUNO}`);
@@ -206,7 +203,7 @@ describe("Alunos", () => {
       );
     });
     it("deve retornar 401 quando o token estiver expirado", async () => {
-      const response = await request(process.env.BASE_URL)
+      const response = await api()
         .get("/api/admin/alunos")
         .set("Content-Type", "application/json")
         .set("Authorization", `Bearer ${obterTokenExpirado()}`);
@@ -216,15 +213,34 @@ describe("Alunos", () => {
         "Token de autenticação inválido ou expirado.",
       );
     });
-    it('deve retornar 403 quando o usuário não tiver permissão para listar os alunos', async () =>{
-      token = await obterToken(process.env.EMAIL_ALUNO, process.env.SENHA_ALUNO);
-      const response = await request(process.env.BASE_URL)
-       .get('/api/admin/alunos')
-       .set('Content-Type', 'application/json')
-       .set('Authorization', `Bearer ${token}`)
-      
+    it("deve retornar 403 quando o usuário não tiver permissão para listar os alunos", async () => {
+      token = await obterToken(
+        process.env.EMAIL_ALUNO,
+        process.env.SENHA_ALUNO,
+      );
+      const response = await api()
+        .get("/api/admin/alunos")
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${token}`);
+
       expect(response.status).to.equal(403);
-      expect(response.body.error).to.equal('Você não tem permissão para acessar este recurso.');
-    })
+      expect(response.body.error).to.equal(
+        "Você não tem permissão para acessar este recurso.",
+      );
+    });
+  });
+  describe("GET/alunos/{id}", () => {
+    it("deve retornar 200 quando buscar pelo id aluno-bruno-lima", async () => {
+      const response = await api()
+        .get("/api/admin/alunos/aluno-bruno-lima")
+        .set("Content-Type", "application/json")
+        .set("Authorization", `Bearer ${token}`);
+      expect(response.status).to.equal(200);
+      expect(response.body.id).to.equal("aluno-bruno-lima");
+      expect(response.body.nome).to.equal("Bruno Lima");
+      expect(response.body.email).to.equal("bruno.lima@example.com");
+      expect(response.body.matricula).to.equal("2024002");
+      expect(response.body).to.not.have.property("senha");
+    });
   });
 });
